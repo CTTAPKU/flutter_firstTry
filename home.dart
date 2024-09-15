@@ -3,6 +3,7 @@ import 'package:expansion_widget/expansion_widget.dart';
 import 'package:first_try/post.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:url_launcher/url_launcher.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -31,9 +32,10 @@ class _HomeState extends State<Home> {
           itemCount: news.length,
           itemBuilder: (context, index) {
             return newsCard(news[index].urlToImage, news[index].title,
-                news[index].name, news[index].description);
+                news[index].name, news[index].description, news[index].url);
           },
-        ));
+        ),
+    );
   }
 
   Future<void> fetchPost() async {
@@ -49,17 +51,19 @@ class _HomeState extends State<Home> {
             title: element["title"],
             name: element['source']["name"],
             description: element["description"],
+            url: element["url"]
           );
           setState(() {
             news.add(nws);
-          });
+          },);
         }
       });
     }
   }
+
 }
 
-Widget newsCard(img, title, newspaper, desc) {
+Widget newsCard(img, title, newspaper, desc, url) {
   return Card(
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
     clipBehavior: Clip.antiAlias,
@@ -79,7 +83,8 @@ Widget newsCard(img, title, newspaper, desc) {
                         gradient: LinearGradient(
                             colors: [Colors.black87, Colors.transparent],
                             begin: Alignment.bottomCenter,
-                            end: Alignment.center)),
+                            end: Alignment.center)
+                    ),
                     child: Ink.image(
                       image: NetworkImage(img),
                       height: 200,
@@ -98,7 +103,8 @@ Widget newsCard(img, title, newspaper, desc) {
                           style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
-                              fontSize: 14),
+                              fontSize: 14
+                          ),
                         ),
                         Text(
                           title,
@@ -106,7 +112,8 @@ Widget newsCard(img, title, newspaper, desc) {
                           style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
-                              fontSize: 24),
+                              fontSize: 24
+                          ),
                         )
                       ],
                     ),
@@ -117,11 +124,33 @@ Widget newsCard(img, title, newspaper, desc) {
           ),
         );
       },
-      content: Container(
-        alignment: Alignment.topLeft,
-        padding: const EdgeInsets.all(20),
-        child: Text(desc),
+      content: Column(
+        children: [
+          Container(
+            alignment: Alignment.topLeft,
+            padding: const EdgeInsets.all(20),
+            child: Text(desc),
+          ),
+          Container(
+            alignment: Alignment.bottomRight,
+            padding: const EdgeInsets.only(right: 20, bottom: 5),
+            child: TextButton(
+                onPressed: () {
+                  _launchUrl(url);
+                },
+                child: Text("Read more")
+            )
+          )
+        ]
       ),
+      
+      
     ),
   );
+}
+
+Future<void> _launchUrl(url) async {
+  if (!await launchUrl(Uri.parse(url))) {
+    throw Exception('Could not launch $url');
+  }
 }
